@@ -2,16 +2,25 @@ from enum import Enum
 from typing import List
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from models import User, Base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from notificationSender import send_message
 from sqlwrapper import (
     insertItem,
 )
 
+import os
+
+DATABASE_URL = os.environ["DATABASE_URL"]
+
 app = FastAPI()
+
 
 # Add this block after creating the FastAPI app instance
 app.add_middleware(
@@ -42,10 +51,23 @@ class user(BaseModel):
     pushToken: str = None
     gpa: float = None
 
-@app.get("/")
-def get():
-    return {"Status": True, "Version": "1.3.6", "sportsday": True}
+# @app.get("/")
+# def get():
+#     return {"Status": True, "Version": "1.3.6", "sportsday": True}
 
+@app.get("/")
+def get_users():
+    engine = create_engine(DATABASE_URL)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    try:
+        users = session.query(User).all()
+        return users
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.commit()
+        session.close()
 
 @app.post("/pushNotification/")
 async def push(token: str, title: str, message: str, itemType: itemTypes):
@@ -71,82 +93,6 @@ async def pushall(title: str, message: str, itemType: itemTypes):
         send_message(pushTokens, title, message, data=page)
     return "Success"
 
-
-@app.post("/insertItem/")
-def insert(eventName: str, eventDesc: str, itemType: itemTypes, notify: bool):
-    insertItem(eventName, eventDesc, itemType.value)
-    strippedEventDesc = stripMarkdown(eventDesc)
-    if notify:
-        if itemType == itemTypes.ANNOUNCEMENTS:
-            page = {"Link": "MainTab/News"}
-        else:
-            page = {"Link": "MainTab/Team Color"}
-        for pushTokens in splitArr(listPushTokens(), 10):
-            send_message(
-                pushTokens, eventName, strippedEventDesc.split("--")[0], data=page
-            )
-    return "Success"
-
-
-@app.post("/insertScore/")
-async def insertscore(red: int, blue: int, yellow: int, green: int):
-    insertScore(str(red), str(blue), str(yellow), str(green))
-    return "Success"
-
-
-@app.post("/insertVerse/")
-async def insertverse(verse: str):
-    insertBibleVerse(verse)
-    return "Success"
-
-
-@app.post("/insertUser/")
-async def insertuser(User: user):
-    User_dict = User.dict()
-    insertUser(
-        User_dict["deviceID"],
-        User_dict["name"],
-        User_dict["teamColor"].value,
-        User_dict["pushToken"],
-        User_dict["gpa"],
-    )
-    return User
-
-
-@app.post("/deleteUser/")
-async def deleteuser(deviceID: str):
-    deleteUser(deviceID)
-    return "Success"
-
-
-@app.get("/users/")
-async def listusers():
-    return listUsers()
-
-
-@app.get("/announcements/")
-async def listannouncements():
-    return listItems("announcements")
-
-
-@app.get("/events/")
-async def listevents():
-    return listItems("events")
-
-
-@app.get("/scores/")
-async def listscores():
-    return listItems("scores")
-
-
-@app.get("/verse/")
-async def listverse():
-    return listItems("verse")
-
-
-@app.get("/popcat/leaderboard/")
-async def get_popcat_leaderboard():
-    return await get_leaderboard()
 
 
 if __name__ == "__main__":
