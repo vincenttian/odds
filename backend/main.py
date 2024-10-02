@@ -6,21 +6,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 import uvicorn
 
-from db import (
-    insertItem,
-)
-
 DATABASE_URL = os.environ["DATABASE_URL"]
-
 app = FastAPI()
-
-# Add this block after creating the FastAPI app instance
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8081"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:8081"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
 )
 
 @app.get("/")
