@@ -1,7 +1,5 @@
 aioredis==2.0.1
-beautifulsoup4==4.12.3
 fastapi==0.114.2
-markdown==3.6
 psycopg2-binary==2.9.9
 pydantic==2.6.3
 requests==2.31.0

@@ -8,26 +8,15 @@ from pydantic import BaseModel
 
 from notificationSender import send_message
 from sqlwrapper import (
-    deleteItem,
-    deleteUser,
-    insertBibleVerse,
     insertItem,
-    insertScore,
-    insertUser,
-    listItems,
-    listPushTokens,
-    listUsers,
 )
-
-from markdown import markdown
-from bs4 import BeautifulSoup
 
 app = FastAPI()
 
 # Add this block after creating the FastAPI app instance
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8081"],  # Add your frontend URL
+    allow_origins=["http://localhost:8081"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,31 +41,6 @@ class user(BaseModel):
     teamColor: teamColors
     pushToken: str = None
     gpa: float = None
-
-
-def stripMarkdown(text: str) -> str:
-
-    # md -> html -> text since BeautifulSoup can extract text cleanly
-    html = markdown(text)
-
-    # extract text
-    soup = BeautifulSoup(html, "html.parser")
-    text = "".join(soup.findAll(text=True))
-
-    return text
-
-
-def splitArr(arr: list, numToSplit: int):
-    masterList = []
-    tempList = []
-    for i in range(len(arr)):
-        tempList.append(arr[i])
-        if (i + 1) % numToSplit == 0:
-            masterList.append(tempList)
-            tempList = []
-    masterList.append(tempList)
-    return masterList
-
 
 @app.get("/")
 def get():
@@ -121,12 +85,6 @@ def insert(eventName: str, eventDesc: str, itemType: itemTypes, notify: bool):
             send_message(
                 pushTokens, eventName, strippedEventDesc.split("--")[0], data=page
             )
-    return "Success"
-
-
-@app.post("/deleteItem/")
-async def delete(id: int, itemType: itemTypes):
-    deleteItem(str(id), itemType.value)
     return "Success"
 
 
