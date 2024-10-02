@@ -2,8 +2,8 @@ from enum import Enum
 from typing import List
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware  # Add this import
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from notificationSender import send_message
@@ -53,31 +53,6 @@ class user(BaseModel):
     teamColor: teamColors
     pushToken: str = None
     gpa: float = None
-
-
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: dict):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except:
-                continue
-
-    async def broadcast_leaderboard(self):
-        await self.broadcast(await get_leaderboard())
-
-
-ConnMan = ConnectionManager()
 
 
 def stripMarkdown(text: str) -> str:
@@ -215,19 +190,6 @@ async def listverse():
 @app.get("/popcat/leaderboard/")
 async def get_popcat_leaderboard():
     return await get_leaderboard()
-
-
-@app.websocket("/popcat/")
-async def popcat_ws(websocket: WebSocket):
-    await ConnMan.connect(websocket)
-    try:
-        await websocket.send_json(await get_leaderboard())
-        while True:
-            data = await websocket.receive_json()
-            await increment_score(data)
-            await ConnMan.broadcast_leaderboard()
-    except WebSocketDisconnect:
-        ConnMan.disconnect(websocket)
 
 
 if __name__ == "__main__":
