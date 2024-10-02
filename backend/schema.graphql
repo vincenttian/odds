@@ -1,0 +1,115 @@
+scalar DateTime
+
+type User {
+  id: ID!
+  email: String
+  emailConfirmedAt: DateTime
+  passwordConfirmedAt: DateTime
+  firstName: String
+  lastName: String
+  profilePhoto: String
+  gender: String
+  username: String
+  phoneNumber: String!
+  phoneVerifiedAt: DateTime
+  age: Int
+  schoolId: ID
+  communities: [Community!]
+  following: [User!]
+  followers: [User!]
+  challengesCreated: [Challenge!]
+  challengesParticipating: [Challenge!]
+  comments: [Comment!]
+}
+
+type Community {
+  id: ID!
+  name: String!
+  country: String
+  state: String
+  city: String
+  district: String
+  zipCode: String
+  zip4: String
+  address: String
+  population: Int
+  lat: String
+  long: String
+  phone: String
+  website: String
+  users: [User!]
+}
+
+type Challenge {
+  id: ID!
+  creator: User!
+  rangeEnd: Int!
+  creatorNumber: Int
+  opponentNumbers: [Int!]
+  createdAt: DateTime!
+  isActive: Boolean!
+  participants: [User!]
+  comments: [Comment!]
+  reRolls: [ChallengeReRoll!]
+  insurance: [ChallengeInsurance!]
+}
+
+type ChallengeReRoll {
+  id: ID!
+  challenge: Challenge!
+  user: User!
+  createdAt: DateTime!
+}
+
+type ChallengeInsurance {
+  id: ID!
+  challenge: Challenge!
+  user: User!
+  createdAt: DateTime!
+}
+
+type Comment {
+  id: ID!
+  challenge: Challenge!
+  user: User!
+  content: String!
+  createdAt: DateTime!
+}
+
+type Query {
+  user(id: ID!): User
+  users: [User!]!
+  community(id: ID!): Community
+  communities: [Community!]!
+  challenge(id: ID!): Challenge
+  challenges: [Challenge!]!
+}
+
+input CreateUserInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  username: String!
+  age: Int!
+}
+
+input CreateChallengeInput {
+  creatorId: ID!
+  rangeEnd: Int!
+  opponentIds: [ID!]!
+}
+
+input CreateCommentInput {
+  challengeId: ID!
+  userId: ID!
+  content: String!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  createChallenge(input: CreateChallengeInput!): Challenge!
+  createComment(input: CreateCommentInput!): Comment!
+  joinCommunity(userId: ID!, communityId: ID!): User!
+  followUser(followerId: ID!, followingId: ID!): User!
+}

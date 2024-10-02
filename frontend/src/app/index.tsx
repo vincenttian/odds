@@ -1,44 +1,127 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import * as SecureStore from 'expo-secure-store';
 import styled from 'styled-components/native'
 import { Stack } from 'expo-router'
-import LinkButton from 'src/components/LinkButton'
-import ScreenLayout from 'src/components/ScreenLayout'
 import { Button } from 'react-native'
+import { gql, useQuery } from "@apollo/client";
+import { View, Text, FlatList } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import storage from 'src/app/storage';
+import { useAuth } from 'src/app/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginAsync, logoutAsync } from 'src/app/_layout';
+
+
+// Define the type for a user based on the schema
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  profilePhoto?: string;
+}
+
+const Tab = createBottomTabNavigator();
+const HScreen: React.FC = () => {
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state?.auth?.isAuthenticated);
+  const { isLoggedIn } = useAuth();
+
+  const handleApiCall = async (url: string, body: any): Promise<any> => {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      console.log(response);
+      if (!response.ok) {
+        throw new Error('API call failed');
+      }
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.error('API call error:', error);
+      throw error;
+    }
+  };
+
+  const phoneNumber = "+15109968208"; // going downwards
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ color: 'white' }}>Home Screen</Text>
+      <Text style={{ color: 'white' }}>Logged In: {isLoggedIn ? 'True' : 'False'}</Text>
+      {/* Only see if unauth */}
+      {!isLoggedIn && (
+        <>
+          <Button title="Create Account" onPress={() => handleApiCall('http://localhost:5500/api/register', { phone: phoneNumber })} />
+          <Button title="Verify" onPress={async () => {
+            try {
+              const response = await handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '797808' });
+              if (response?.access_token) {
+                // set access token in secure store
+                // await storage.setItem('auth_token', response.access_token);
+                await dispatch(loginAsync({ auth_token: response.access_token }));
+                window.location.reload(false);
+                // need to refresh state of app
+              }
+            } catch (error) {
+              console.error("verification failed", error);
+            }
+          }} />
+          <Button title="Login" onPress={() => handleApiCall('http://localhost:5500/api/login', { phone: phoneNumber })} />
+          <Button title="Re-send code" onPress={() => handleApiCall('http://localhost:5500/api/resend-verification/3531b3c2-9fdc-48dc-b586-f115ef5dc84d', { phone: phoneNumber })} />
+        </>
+      )}
+      {/* Only see if auth */}
+      {isLoggedIn && (
+        <Button title="Log out" onPress={async () => {
+          await dispatch(logoutAsync());
+          window.location.reload(false);
+          // storage.deleteItem("auth_token");
+          // need to find way to refresh client state
+        }} />
+      )}
+    </View>
+  );
+};
+
+const GridScreen: React.FC = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ color: 'white' }}>Grid Screen</Text>
+    </View>
+  );
+};
+
+const ProfileScreen: React.FC = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ color: 'white' }}>Profile Screen</Text>
+    </View>
+  );
+};
+
+const MyTabs = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Home" component={HScreen} />
+      <Tab.Screen name="Grid" component={GridScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
 
 export default function HomeScreen() {
-  const [apiResponse, setApiResponse] = useState<string | null>(null)
-
-  const makeApiCall = async () => {
-    try {
-      const response = await fetch('http://localhost:5500/')
-      const data = await response.json()
-      setApiResponse(JSON.stringify(data))
-    } catch (error) {
-      console.error('Error making API call:', error)
-      setApiResponse('Error occurred while making API call')
-    }
-  }
-
-  return (
-    <ScreenLayout testID="home-screen-layout">
-      <S.Content testID="home-screen-content">
-        <Stack.Screen options={{ title: 'Home Screen' }} />
-
-        <S.Title testID="home-screen-title">🏠</S.Title>
-        <S.Text testID="home-screen-text">Go to app/index.tsx to edit</S.Text>
-
-        <LinkButton href="/second" text="Go To Second Screen" />
-
-        <Button title="Make API Call" onPress={makeApiCall} />
-
-        {apiResponse && (
-          <S.ApiResponse testID="api-response">
-            API Response: {apiResponse}
-          </S.ApiResponse>
-        )}
-      </S.Content>
-    </ScreenLayout>
-  )
+  const { loading, error, data } = useQuery<{ users: User[] }>(GET_USERS);
+  if (loading) return <Text>Loading...</Text>;
+  if (error) return <Text>Error: {error.message}</Text>;
+  console.log(data);
+  return <MyTabs />
 }
 
 const S = {
@@ -69,3 +152,16 @@ const S = {
     text-align: center;
   `
 }
+
+const GET_USERS = gql`
+  query GetUsers {
+    users {
+      id
+      email
+      username
+      firstName
+      lastName
+      profilePhoto
+    }
+  }
+`;

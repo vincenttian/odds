@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Expo Router Typescript",
-    "slug": "expo-router-typescript",
+    "name": "Odds",
+    "slug": "odds",
     "scheme": "app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,6 +14,7 @@
       "**/*"
     ],
     "ios": {
+      "bundleIdentifier": "com.growth.odds",
       "supportsTablet": false
     },
     "android": {
@@ -29,11 +30,15 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ],
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "27b36101-bade-44f8-b389-cb1d80833a64"
       }
     }
   }

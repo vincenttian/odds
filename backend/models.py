@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy import (
     create_engine,
     Column,
@@ -10,21 +11,27 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
 user_community_association = Table(
     "user_community",
     Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("community_id", Integer, ForeignKey("communities.id"), primary_key=True),
+    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True),
+    Column("community_id", UUID(as_uuid=True), ForeignKey("communities.id"), primary_key=True),
 )
 
-class User(Base):
+class TimestampMixin:
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+class User(Base, TimestampMixin):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    # id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
     email_confirmed_at = Column(DateTime, nullable=True)
@@ -33,12 +40,16 @@ class User(Base):
     last_name = Column(String)
     profile_photo = Column(String, nullable=True)
     gender = Column(String, nullable=True)
-    username = Column(String, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=True)
     phone_number = Column(String, nullable=True)
-    phone_verified_at = Column(DateTime, nullable=True)
+    phone_verified_at = Column(DateTime(timezone=True), nullable=True)
     age = Column(Integer)
-    school_id = Column(Integer, ForeignKey("communities.id"))
+    school_id = Column(UUID(as_uuid=True), ForeignKey("communities.id"))
 
+    verification_code = Column(String, nullable=True)
+    verification_code_created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
+    is_verified = Column(Boolean, default=False)
+    
     # Relationships
     communities = relationship(
         "Community",
@@ -68,17 +79,17 @@ class User(Base):
     comments = relationship("Comment", backref="user")
 
 
-class UserFollows(Base):
+class UserFollows(Base, TimestampMixin):
     __tablename__ = "user_follows"
 
-    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    following_user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    following_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
 
 
-class Community(Base):
+class Community(Base, TimestampMixin):
     __tablename__ = "communities"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, unique=True, nullable=False)
     country = Column(String)
     state = Column(String)
@@ -99,21 +110,20 @@ class Community(Base):
 challenge_participants = Table(
     "challenge_participants",
     Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("challenge_id", Integer, ForeignKey("challenges.id"), primary_key=True),
+    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True),
+    Column("challenge_id", UUID(as_uuid=True), ForeignKey("challenges.id"), primary_key=True),
 )
 
 
-class Challenge(Base):
+class Challenge(Base, TimestampMixin):
     __tablename__ = "challenges"
 
-    id = Column(Integer, primary_key=True, index=True)
-    creator_id = Column(Integer, ForeignKey("users.id"))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    creator_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     # opponent_ids = Column(ARRAY(Integer))  # Using ARRAY for PostgreSQL
     range_end = Column(Integer)  # Always starts at 1
     creator_number = Column(Integer, nullable=True)
     opponent_numbers = Column(ARRAY(Integer), nullable=True)  # Array for opponent numbers
-    created_at = Column(DateTime)
     is_active = Column(Boolean, default=False)
 
     # Relationships (creator relationship defined above)
@@ -122,29 +132,26 @@ class Challenge(Base):
     insurance = relationship("ChallengeInsurance", backref="challenge")
 
 
-class ChallengeReRoll(Base):
+class ChallengeReRoll(Base, TimestampMixin):
     __tablename__ = "challenge_rerolls"
 
-    id = Column(Integer, primary_key=True, index=True)
-    challenge_id = Column(Integer, ForeignKey("challenges.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    challenge_id = Column(UUID(as_uuid=True), ForeignKey("challenges.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
 
 
-class ChallengeInsurance(Base):
+class ChallengeInsurance(Base, TimestampMixin):
     __tablename__ = "challenge_insurance"
 
-    id = Column(Integer, primary_key=True, index=True)
-    challenge_id = Column(Integer, ForeignKey("challenges.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    challenge_id = Column(UUID(as_uuid=True), ForeignKey("challenges.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
 
 
-class Comment(Base):
+class Comment(Base, TimestampMixin):
     __tablename__ = "comments"
 
-    id = Column(Integer, primary_key=True, index=True)
-    challenge_id = Column(Integer, ForeignKey("challenges.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    challenge_id = Column(UUID(as_uuid=True), ForeignKey("challenges.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     content = Column(Text)
-    created_at = Column(DateTime)
