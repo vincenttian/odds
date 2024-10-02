@@ -3,6 +3,7 @@ from typing import List
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware  # Add this import
 from pydantic import BaseModel
 
 from notificationSender import send_message
@@ -24,6 +25,14 @@ from bs4 import BeautifulSoup
 
 app = FastAPI()
 
+# Add this block after creating the FastAPI app instance
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8081"],  # Add your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class itemTypes(Enum):
     ANNOUNCEMENTS = "announcements"

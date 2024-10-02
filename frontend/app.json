@@ -1,48 +1,40 @@
 {
   "expo": {
-    "owner": "nexus-bcis",
-    "name": "Nexus",
-    "slug": "Nexus",
-    "scheme": "nexus",
-    "description": "This is official app from the BCIS student council. This app was made for checking news and updates from the student council.",
-    "privacy": "public",
-    "version": "1.3.6",
-    "icon": "./assets/icon.png",
-    "backgroundColor": "#121212",
-    "primaryColor": "#121212",
+    "name": "Expo Router Typescript",
+    "slug": "expo-router-typescript",
+    "scheme": "app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/app-icon.png",
     "splash": {
-      "backgroundColor": "#121212"
+      "image": "./src/assets/images/splash.png",
+      "backgroundColor": "#222"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": ["assets/*", "assets/fonts/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true,
-      "buildNumber": "1.3.6",
-      "bundleIdentifier": "com.parin.nexus",
-      "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
-      }
+      "supportsTablet": false
     },
     "android": {
-      "package": "com.parin.nexus",
-      "versionCode": 19
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/app-icon.png",
+        "backgroundColor": "#222"
+      },
+      "package": "com.haytherecharlie.exporoutertypescript"
     },
     "web": {
-      "favicon": "./assets/adaptive-icon.png"
+      "favicon": "./src/assets/images/app-icon.png",
+      "bundler": "metro"
     },
-    "plugins": ["sentry-expo"],
-    "hooks": {
-      "postPublish": [
-        {
-          "file": "sentry-expo/upload-sourcemaps",
-          "config": {
-            "organization": "parinthapat-p",
-            "project": "nexus"
-          }
-        }
-      ]
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      }
     }
   }
 }
