@@ -7,7 +7,6 @@ This is a *complete full stack **react native - python fastapi** application*
 # Techstack
 - Frontend:
   - **React Native** (Expo)
-  - **Zustand**: State management
   - **Sentry**: Error Reporting
   - **Styled-components**: CSS-in-JS completely custom components built from the ground up.
   - **React Navigation v5**: Navigation and deep linking
@@ -31,7 +30,6 @@ Code is split into two parts, the *backend* and the *frontend*.
 
 ## Frontend
 File structure same as any expo/react native and most names are self-explanatory, so I'll only be going into the _components_ folder.
-- **store.js**: Zustand context manager.
 - **FirstTime**: Listed accordingly, they are the first pages that the users are presented to in order to sign up.
 - **Main**: These are the screens/components that related to the main screen, this is the screen that the users to presented to on every entry into the app.
 - **Pages**: Other screens that the users can navigate to. The names in here are self-explanatory.

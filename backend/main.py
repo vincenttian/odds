@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from notificationSender import send_message
-from rediswrapper import get_leaderboard, increment_score
 from sqlwrapper import (
     deleteItem,
     deleteUser,
