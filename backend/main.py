@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from notificationSender import send_message
-from sqlwrapper import (
+from db import (
     insertItem,
 )
 
