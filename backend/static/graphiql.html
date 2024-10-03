@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GraphiQL</title>
+    <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.css" />
+    <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/graphiql/graphiql.min.js"></script>
+</head>
+<body>
+    <div id="graphiql" style="height: 100vh;"></div>
+    <script>
+        const graphQLFetcher = graphQLParams =>
+            fetch('http://localhost:5500/graphql', {
+                method: 'post',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(graphQLParams),
+            }).then(response => response.json());
+
+        ReactDOM.render(
+            React.createElement(GraphiQL, { fetcher: graphQLFetcher }),
+            document.getElementById('graphiql'),
+        );
+    </script>
+</body>
+</html>
