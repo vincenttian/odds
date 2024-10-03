@@ -1,6 +1,7 @@
 aioredis==2.0.1
 alembic==1.13.3
 ariadne==0.23.0
+asyncpg==0.29.0
 fastapi==0.114.2
 graphql-core==3.2.4
 psycopg2-binary==2.9.9

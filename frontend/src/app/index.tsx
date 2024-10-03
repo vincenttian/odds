@@ -10,7 +10,7 @@ export default function HomeScreen() {
 
   const makeApiCall = async () => {
     try {
-      const response = await fetch('http://localhost:5500/')
+      const response = await fetch('http://localhost:5500/graphql')
       const data = await response.json()
       setApiResponse(JSON.stringify(data))
     } catch (error) {
