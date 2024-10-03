@@ -8,6 +8,7 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
+from starlette.responses import JSONResponse
 import uvicorn
 
 DATABASE_URL = os.environ["DATABASE_URL"].replace("postgresql://", "postgresql+asyncpg://")
@@ -30,23 +31,28 @@ async def resolve_users(_, info):
         try:
             result = await session.execute(select(User))
             users = result.scalars().all()
-            return {"users": users}
+            # return {"users": users}
+            return users
         except Exception as e:
             print(e)
             raise HTTPException(status_code=500, detail=str(e))
 
 schema = make_executable_schema(type_defs, [query])
 
-@app.get("/graphql")
+@app.route("/graphql", methods=["GET", "POST"])
 async def graphql_route(request):
-    data = await request.json()
-    success, result = await graphql(
-        schema,
-        data,
-        context_value={"request": request},
-        debug=app.debug
-    )
-    return JSONResponse(result, status_code=200 if success else 400)
+    if request.method == "GET":
+        # Handle GET requests (e.g., for GraphQL Playground)
+        return JSONResponse({"message": "GraphQL endpoint"})
+    elif request.method == "POST":
+        data = await request.json()
+        success, result = await graphql(
+            schema,
+            data,
+            context_value={"request": request},
+            debug=app.debug
+        )
+        return JSONResponse(result, status_code=200 if success else 400)
 
 # @app.get("/graphql/playground")
 # async def graphql_playground():

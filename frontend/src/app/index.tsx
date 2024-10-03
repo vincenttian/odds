@@ -4,20 +4,24 @@ import { Stack } from 'expo-router'
 import LinkButton from 'src/components/LinkButton'
 import ScreenLayout from 'src/components/ScreenLayout'
 import { Button } from 'react-native'
+import { gql, useQuery } from "@apollo/client";
+import { View, Text, FlatList } from 'react-native';
+
+// Define the type for a user based on the schema
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  profilePhoto?: string;
+}
 
 export default function HomeScreen() {
-  const [apiResponse, setApiResponse] = useState<string | null>(null)
-
-  const makeApiCall = async () => {
-    try {
-      const response = await fetch('http://localhost:5500/graphql')
-      const data = await response.json()
-      setApiResponse(JSON.stringify(data))
-    } catch (error) {
-      console.error('Error making API call:', error)
-      setApiResponse('Error occurred while making API call')
-    }
-  }
+  const { loading, error, data } = useQuery<{ users: User[] }>(GET_USERS);
+  if (loading) return <Text>Loading...</Text>;
+  if (error) return <Text>Error: {error.message}</Text>;
+  console.log(data);
 
   return (
     <ScreenLayout testID="home-screen-layout">
@@ -28,14 +32,16 @@ export default function HomeScreen() {
         <S.Text testID="home-screen-text">Go to app/index.tsx to edit</S.Text>
 
         <LinkButton href="/second" text="Go To Second Screen" />
-
-        <Button title="Make API Call" onPress={makeApiCall} />
-
-        {apiResponse && (
-          <S.ApiResponse testID="api-response">
-            API Response: {apiResponse}
-          </S.ApiResponse>
-        )}
+        <View>
+          Data
+          <FlatList
+            data={data?.users}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <Text>{item.username} ({item.email})</Text>
+            )}
+          />
+        </View>
       </S.Content>
     </ScreenLayout>
   )
@@ -69,3 +75,16 @@ const S = {
     text-align: center;
   `
 }
+
+const GET_USERS = gql`
+  query GetUsers {
+    users {
+      id
+      email
+      username
+      firstName
+      lastName
+      profilePhoto
+    }
+  }
+`;

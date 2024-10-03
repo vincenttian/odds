@@ -23,6 +23,7 @@
     "semver": ">=7.5.4"
   },
   "dependencies": {
+    "@apollo/client": "^3.11.8",
     "@react-navigation/native": "^6.1.9",
     "expo": "~51.0.35",
     "expo-dev-client": "~4.0.27",
