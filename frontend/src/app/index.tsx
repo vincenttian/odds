@@ -6,6 +6,7 @@ import ScreenLayout from 'src/components/ScreenLayout'
 import { Button } from 'react-native'
 import { gql, useQuery } from "@apollo/client";
 import { View, Text, FlatList } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Define the type for a user based on the schema
 interface User {
@@ -17,34 +18,39 @@ interface User {
   profilePhoto?: string;
 }
 
+const Tab = createBottomTabNavigator();
+
+const HScreen: React.FC = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Home Screen</Text>
+    </View>
+  );
+};
+
+const ProfileScreen: React.FC = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Profile Screen</Text>
+    </View>
+  );
+};
+
+const MyTabs = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Home" component={HScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
+
 export default function HomeScreen() {
   const { loading, error, data } = useQuery<{ users: User[] }>(GET_USERS);
   if (loading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
   console.log(data);
-
-  return (
-    <ScreenLayout testID="home-screen-layout">
-      <S.Content testID="home-screen-content">
-        <Stack.Screen options={{ title: 'Home Screen' }} />
-
-        <S.Title testID="home-screen-title">🏠</S.Title>
-        <S.Text testID="home-screen-text">Go to app/index.tsx to edit</S.Text>
-
-        <LinkButton href="/second" text="Go To Second Screen" />
-        <View>
-          Data
-          <FlatList
-            data={data?.users}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <Text>{item.username} ({item.email})</Text>
-            )}
-          />
-        </View>
-      </S.Content>
-    </ScreenLayout>
-  )
+  return <MyTabs />
 }
 
 const S = {
