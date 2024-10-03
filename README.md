@@ -18,4 +18,9 @@ Code is split into two parts, the *backend* and the *frontend*.
 ## Backend
 - **main.py**: Main fastapi endpoint which uses all of the functions above. _Websocket handling is also right here._
 
+`export DATABASE_URL="postgresql://vincenttian@localhost:5432/odds_db"`
+`python3 main.py`
+
 ## Frontend
+`npm install`
+`npx expo start`
