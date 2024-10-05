@@ -21,7 +21,15 @@ const Tab = createBottomTabNavigator();
 const HScreen: React.FC = () => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Home Screen</Text>
+      <Text style={{ color: 'white' }}>Home Screen</Text>
+    </View>
+  );
+};
+
+const GridScreen: React.FC = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ color: 'white' }}>Grid Screen</Text>
     </View>
   );
 };
@@ -29,7 +37,7 @@ const HScreen: React.FC = () => {
 const ProfileScreen: React.FC = () => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Profile Screen</Text>
+      <Text style={{ color: 'white' }}>Profile Screen</Text>
     </View>
   );
 };
@@ -38,6 +46,7 @@ const MyTabs = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen name="Home" component={HScreen} />
+      <Tab.Screen name="Grid" component={GridScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
