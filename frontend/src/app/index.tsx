@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components/native'
 import { Stack } from 'expo-router'
-import LinkButton from 'src/components/LinkButton'
-import ScreenLayout from 'src/components/ScreenLayout'
 import { Button } from 'react-native'
 import { gql, useQuery } from "@apollo/client";
 import { View, Text, FlatList } from 'react-native';
