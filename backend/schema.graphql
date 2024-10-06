@@ -2,15 +2,15 @@ scalar DateTime
 
 type User {
   id: ID!
-  email: String!
+  email: String
   emailConfirmedAt: DateTime
   passwordConfirmedAt: DateTime
   firstName: String
   lastName: String
   profilePhoto: String
   gender: String
-  username: String!
-  phoneNumber: String
+  username: String
+  phoneNumber: String!
   phoneVerifiedAt: DateTime
   age: Int
   schoolId: ID
