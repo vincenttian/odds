@@ -21,6 +21,11 @@ Code is split into two parts, the *backend* and the *frontend*.
 `export DATABASE_URL="postgresql://vincenttian@localhost:5432/odds_db"`
 `python3 main.py`
 
+`psql postgresql://vincenttian@localhost:5432/odds_db` to go into tables
+
+
+
 ## Frontend
 `npm install`
 `npx expo start`
+

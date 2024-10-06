@@ -16,6 +16,7 @@ from starlette.responses import JSONResponse
 from auth import create_verification_code, create_access_token, verify_code
 import uvicorn
 
+# DATABASE_URL="postgresql://vincenttian@localhost:5432/odds_db"
 DATABASE_URL = os.environ["DATABASE_URL"].replace("postgresql://", "postgresql+asyncpg://")
 engine = create_async_engine(DATABASE_URL, echo=True)
 
