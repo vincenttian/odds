@@ -19,9 +19,31 @@ interface User {
 const Tab = createBottomTabNavigator();
 
 const HScreen: React.FC = () => {
+  const handleCreateAccount = async () => {
+    try {
+      // replace with right URL
+      const response = await fetch('http://localhost:5500/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone_number: '5109968018' }),
+      });
+      console.log(response);
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
+
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text style={{ color: 'white' }}>Home Screen</Text>
+      <Button title="Create Account" onPress={handleCreateAccount} />
     </View>
   );
 };
