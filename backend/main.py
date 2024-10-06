@@ -3,12 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from ariadne import graphql, make_executable_schema, load_schema_from_path, ObjectType
 from pydantic import BaseModel, Field
+from uuid import UUID
+
 
 # from ariadne.constants import PLAYGROUND_HTML
 from models import User, Base
 import os
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from starlette.requests import Request
@@ -124,7 +127,7 @@ async def verify(data: VerificationRequest = Body(...), db: AsyncSession = Depen
 
 @router.post("/resend-verification/{user_id}")
 async def resend_verification(
-    user_id: int = Path(..., title="The ID of the user"),
+    user_id: UUID = Path(..., title="The UUID of the user"),
     db: AsyncSession = Depends(get_db)
 ):
     try:
@@ -141,6 +144,9 @@ async def resend_verification(
                 raise HTTPException(status_code=429, detail="Please wait before requesting a new code")
 
         new_code = create_verification_code()
+        print("\n\n\n\n\n")
+        print(new_code)
+        print("\n\n\n\n\n")
         user.verification_code = new_code
         user.verification_code_created_at = datetime.now(timezone.utc)
 

@@ -24,6 +24,8 @@ Code is split into two parts, the *backend* and the *frontend*.
 `psql postgresql://vincenttian@localhost:5432/odds_db` to go into tables
 
 
+`alembic revision --autogenerate -m "Timestamp mixin and uuids"`
+`alembic upgrade head`
 
 ## Frontend
 `npm install`
