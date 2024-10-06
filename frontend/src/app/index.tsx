@@ -37,13 +37,14 @@ const HScreen: React.FC = () => {
       console.error('API call error:', error);
     }
   };
-  const phoneNumber = "+15109968015"; // going downwards
+  const phoneNumber = "+15109968013"; // going downwards
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text style={{ color: 'white' }}>Home Screen</Text>
       <Button title="Create Account" onPress={() => handleApiCall('http://localhost:5500/api/register', { phone: phoneNumber })} />
-      <Button title="Verify" onPress={() => handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '323339' })} />
+      <Button title="Verify" onPress={() => handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '940647' })} />
       <Button title="Login" onPress={() => handleApiCall('http://localhost:5500/api/login', { phone: phoneNumber })} />
+      <Button title="Re-send code" onPress={() => handleApiCall('http://localhost:5500/api/resend-verification/7', { phone: phoneNumber })} />
     </View>
   );
 };

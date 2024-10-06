@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Body, Depends, HTTPException
+from fastapi import FastAPI, APIRouter, Body, Depends, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from ariadne import graphql, make_executable_schema, load_schema_from_path, ObjectType
@@ -78,6 +78,7 @@ async def register(phone: PhoneNumber, db: AsyncSession = Depends(get_db)):
     user = await db.execute(select(User).where(User.phone_number == phone.phone))
     user = user.scalar_one_or_none()
     if user:
+        print("User already registered")
         raise HTTPException(status_code=400, detail="User already registered")
     
     code = create_verification_code()
@@ -119,6 +120,40 @@ async def verify(data: VerificationRequest = Body(...), db: AsyncSession = Depen
     
     access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/resend-verification/{user_id}")
+async def resend_verification(
+    user_id: int = Path(..., title="The ID of the user"),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Check if enough time has passed since the last code was sent
+        if user.verification_code_created_at:
+            time_since_last_code = datetime.now(timezone.utc) - user.verification_code_created_at
+            if time_since_last_code < timedelta(minutes=1):  # Adjust this time as needed
+                raise HTTPException(status_code=429, detail="Please wait before requesting a new code")
+
+        new_code = create_verification_code()
+        user.verification_code = new_code
+        user.verification_code_created_at = datetime.now(timezone.utc)
+
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+        # Assume send_verification_code is implemented
+        # await send_verification_code(user.phone_number, new_code)
+
+        return {"message": "New verification code sent"}
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.post("/login")
 async def login(phone: PhoneNumber, db: AsyncSession = Depends(get_db)):
