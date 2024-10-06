@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -33,12 +34,16 @@ class User(Base):
     last_name = Column(String)
     profile_photo = Column(String, nullable=True)
     gender = Column(String, nullable=True)
-    username = Column(String, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=True)
     phone_number = Column(String, nullable=True)
-    phone_verified_at = Column(DateTime, nullable=True)
+    phone_verified_at = Column(DateTime(timezone=True), nullable=True)
     age = Column(Integer)
     school_id = Column(Integer, ForeignKey("communities.id"))
 
+    verification_code = Column(String, nullable=True)
+    verification_code_created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
+    is_verified = Column(Boolean, default=False)
+    
     # Relationships
     communities = relationship(
         "Community",

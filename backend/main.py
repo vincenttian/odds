@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Body
+from fastapi import FastAPI, APIRouter, Body, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from ariadne import graphql, make_executable_schema, load_schema_from_path, ObjectType
@@ -7,11 +7,13 @@ from pydantic import BaseModel, Field
 # from ariadne.constants import PLAYGROUND_HTML
 from models import User, Base
 import os
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
+from starlette.requests import Request
 from starlette.responses import JSONResponse
-from auth import create_verification_code, create_access_token
+from auth import create_verification_code, create_access_token, verify_code
 import uvicorn
 
 DATABASE_URL = os.environ["DATABASE_URL"].replace("postgresql://", "postgresql+asyncpg://")
@@ -28,34 +30,40 @@ router = APIRouter(prefix="/api")
 type_defs = load_schema_from_path("schema.graphql")
 query = ObjectType("Query")
 
-@query.field("users")
-async def resolve_users(_, info):
-    async_session = sessionmaker(engine, class_=AsyncSession)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async def get_db():
     async with async_session() as session:
         try:
-            result = await session.execute(select(User))
-            users = result.scalars().all()
-            # return {"users": users}
-            return users
-        except Exception as e:
-            print(e)
-            raise HTTPException(status_code=500, detail=str(e))
+            yield session
+        finally:
+            await session.close()
+
+@query.field("users")
+async def resolve_users(_, info):
+    db = info.context["db"]
+    try:
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        return users
+    except Exception as e:
+        print(e)
+        raise GraphQLError(f"Database error: {str(e)}")
 
 schema = make_executable_schema(type_defs, [query])
 
 @app.route("/graphql", methods=["GET", "POST"])
-async def graphql_route(request):
+async def graphql_route(request: Request):
     if request.method == "GET":
-        # Handle GET requests (e.g., for GraphQL Playground)
         return JSONResponse({"message": "GraphQL endpoint"})
     elif request.method == "POST":
-        data = await request.json()
-        success, result = await graphql(
-            schema,
-            data,
-            context_value={"request": request},
-            debug=app.debug
-        )
+        async with async_session() as session:
+            data = await request.json()
+            success, result = await graphql(
+                schema,
+                data,
+                context_value={"request": request, "db": session},
+                debug=app.debug
+            )
         return JSONResponse(result, status_code=200 if success else 400)
 
 class PhoneNumber(BaseModel):
@@ -66,39 +74,68 @@ class VerificationRequest(BaseModel):
     code: str = Field(..., min_length=6, max_length=6)
 
 @router.post("/register")
-async def register(phone: PhoneNumber):
-    # user = await User.get_by_phone(phone.number)
-    # if user:
-    #     raise HTTPException(status_code=400, detail="User already registered")
+async def register(phone: PhoneNumber, db: AsyncSession = Depends(get_db)):
+    user = await db.execute(select(User).where(User.phone_number == phone.phone))
+    user = user.scalar_one_or_none()
+    if user:
+        raise HTTPException(status_code=400, detail="User already registered")
     
     code = create_verification_code()
+    new_user = User(phone_number=phone.phone, verification_code=code)
+    db.add(new_user)
+    await db.commit()
     # await send_verification_code(phone.number, code)
-    # await User.create(phone=phone.number, verification_code=code)
     return {"message": "Verification code sent"}
 
 @router.post("/verify")
-async def verify(data: VerificationRequest = Body(...)):
+async def verify(data: VerificationRequest = Body(...), db: AsyncSession = Depends(get_db)):
     phone, code = data.phone, data.code
-    # user = await User.get_by_phone(phone.number)
-    # if not user or user.verification_code != code.code:
-    #     raise HTTPException(status_code=400, detail="Invalid code")
+    user = await db.execute(select(User).where(User.phone_number == phone))
+    user = user.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
-    # user.is_verified = True
-    # await user.save()
+    if not user.verification_code:
+        raise HTTPException(status_code=400, detail="No verification code found")
     
-    access_token = create_access_token(data={"sub": str("user.id")})
+    now = datetime.now(timezone.utc)
+    ten_minutes_ago = now - timedelta(minutes=10)
+    # Ensure user.verification_code_created_at is timezone-aware
+    if user.verification_code_created_at:
+        user_code_created_at = user.verification_code_created_at.replace(tzinfo=timezone.utc)
+        if user_code_created_at < ten_minutes_ago:
+            print("Verification code expired")
+            raise HTTPException(status_code=400, detail="Verification code expired")
+    
+    if not verify_code(user.verification_code, data.code):
+        print("Invalid verification code")
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+    
+    user.is_verified = True
+    user.phone_verified_at = now
+    user.verification_code = None
+    user.verification_code_created_at = None
+    await db.commit()
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login")
-async def login(phone: PhoneNumber):
-    # user = await User.get_by_phone(phone.number)
-    # if not user:
-    #     raise HTTPException(status_code=404, detail="User not found")
-    
+async def login(phone: PhoneNumber, db: AsyncSession = Depends(get_db)):
+    user = await db.execute(select(User).where(User.phone_number == phone.phone))
+    user = user.scalar_one_or_none()
+    if not user:
+        print("USER NOT FOUND")
+        raise HTTPException(status_code=400, detail="User not found")
+
     code = create_verification_code()
     # await send_verification_code(phone.number, code)
-    # user.verification_code = code
-    # await user.save()
+    user.verification_code = code
+    user.verification_code_created_at = datetime.now(timezone.utc)
+
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
     return {"message": "Verification code sent"}
 
 

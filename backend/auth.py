@@ -19,6 +19,9 @@ def verify_token(token: str):
     except JWTError:
         return None
 
+def verify_code(stored_code: str, input_code: str) -> bool:
+    return secrets.compare_digest(stored_code, input_code)
+
 def create_verification_code() -> str:
     return secrets.randbelow(1000000).__str__().zfill(6)
 
