@@ -5,9 +5,11 @@ import { StatusBar } from 'expo-status-bar'
 import PropTypes from "prop-types";
 import styled, { ThemeProvider, type DefaultTheme } from 'styled-components/native'
 import { ApolloClient, ApolloProvider, InMemoryCache, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 import { appTheme, navTheme } from 'src/config/theme'
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
+import storage from 'src/app/storage';
 
 const initialState = { value: 0 }
 function rootReducer(state = initialState, action: any) {
@@ -43,9 +45,26 @@ const httpLink = createHttpLink({
   },
 });
 
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const token = await storage.getItem('auth_token');
+    console.log('token')
+    console.log('\n\n\n\n', token, '\n\n\n\n');
+    // const token = await SecureStore.getItemAsync('auth_token');
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : "",
+      }
+    }
+  } catch (error) {
+    return { headers };
+  }
+});
+
 const client = new ApolloClient({
-  link: httpLink,
-  cache: new InMemoryCache(),
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache()
 });
 
 export default function AppLayout() {

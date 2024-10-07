@@ -98,13 +98,15 @@ async def verify(data: VerificationRequest = Body(...), db: AsyncSession = Depen
     user = await db.execute(select(User).where(User.phone_number == phone))
     user = user.scalar_one_or_none()
     if not user:
+        print("User not found")
         raise HTTPException(status_code=404, detail="User not found")
     
     if not user.verification_code:
+        print("No veification code found")
         raise HTTPException(status_code=400, detail="No verification code found")
     
     now = datetime.now(timezone.utc)
-    ten_minutes_ago = now - timedelta(minutes=10)
+    ten_minutes_ago = now - timedelta(minutes=60) # TODO - change back to 10 min
     # Ensure user.verification_code_created_at is timezone-aware
     if user.verification_code_created_at:
         user_code_created_at = user.verification_code_created_at.replace(tzinfo=timezone.utc)
