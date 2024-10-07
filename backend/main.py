@@ -1,9 +1,11 @@
-from fastapi import FastAPI, APIRouter, Body, Depends, HTTPException, Path
+from fastapi import FastAPI, APIRouter, Body, Depends, HTTPException, Path, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from ariadne import graphql, make_executable_schema, load_schema_from_path, ObjectType
 from pydantic import BaseModel, Field
 from uuid import UUID
+from graphql import GraphQLError
 
 
 # from ariadne.constants import PLAYGROUND_HTML
@@ -16,7 +18,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from auth import create_verification_code, create_access_token, verify_code
+from auth import create_verification_code, create_access_token, verify_code, verify_token, SECRET_KEY, ALGORITHM
+
 import uvicorn
 
 # DATABASE_URL="postgresql://vincenttian@localhost:5432/odds_db"
@@ -30,6 +33,7 @@ app.add_middleware(
     allow_methods=["*"], allow_headers=["*"],
 )
 router = APIRouter(prefix="/api")
+security = HTTPBearer()
 
 type_defs = load_schema_from_path("schema.graphql")
 query = ObjectType("Query")
@@ -42,8 +46,30 @@ async def get_db():
         finally:
             await session.close()
 
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security), db: AsyncSession = Depends(get_db)):
+    token = credentials.credentials
+    payload = verify_token(token)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Invalid token or expired token")
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = await db.execute(select(User).where(User.id == user_id))
+    user = user.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+def require_auth(info):
+    current_user = info.context["current_user"]
+    if not current_user:
+        raise GraphQLError("Authentication required")
+    return current_user
+
 @query.field("users")
 async def resolve_users(_, info):
+    # current_user = require_auth(info)
     db = info.context["db"]
     try:
         result = await db.execute(select(User))
@@ -62,10 +88,23 @@ async def graphql_route(request: Request):
     elif request.method == "POST":
         async with async_session() as session:
             data = await request.json()
+            
+            # Get the authorization header
+            auth_header = request.headers.get("Authorization")
+            current_user = None
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+                payload = verify_token(token)
+                if payload:
+                    user_id = payload.get("sub")
+                    if user_id:
+                        user = await session.execute(select(User).where(User.id == user_id))
+                        current_user = user.scalar_one_or_none()
+
             success, result = await graphql(
                 schema,
                 data,
-                context_value={"request": request, "db": session},
+                context_value={"request": request, "db": session, "current_user": current_user},
                 debug=app.debug
             )
         return JSONResponse(result, status_code=200 if success else 400)
@@ -181,7 +220,6 @@ async def login(phone: PhoneNumber, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(user)
     return {"message": "Verification code sent"}
-
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

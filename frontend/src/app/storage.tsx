@@ -16,6 +16,13 @@ const storage = {
       await SecureStore.setItemAsync(key, value);
     }
   },
+  deleteItem: async (key: string): Promise<void> => {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  },
   // Add other methods as needed
 };
 

@@ -10,6 +10,7 @@ import { appTheme, navTheme } from 'src/config/theme'
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import storage from 'src/app/storage';
+import { AuthProvider } from 'src/app/AuthContext';
 
 const initialState = { value: 0 }
 function rootReducer(state = initialState, action: any) {
@@ -48,9 +49,6 @@ const httpLink = createHttpLink({
 const authLink = setContext(async (_, { headers }) => {
   try {
     const token = await storage.getItem('auth_token');
-    console.log('token')
-    console.log('\n\n\n\n', token, '\n\n\n\n');
-    // const token = await SecureStore.getItemAsync('auth_token');
     return {
       headers: {
         ...headers,
@@ -69,18 +67,20 @@ const client = new ApolloClient({
 
 export default function AppLayout() {
   return (
-    <Provider store={store}>
-      <ApolloProvider client={client}>
-        <ThemeProvider theme={appTheme as DefaultTheme}>
-          <StatusBar style="light" />
-          <S.AppWrapper>
-            <NavProvider value={navTheme}>
-              <Slot screenOptions={{ headerShown: false }} />
-            </NavProvider>
-          </S.AppWrapper>
-        </ThemeProvider>
-      </ApolloProvider>
-    </Provider>
+    <AuthProvider>
+      <Provider store={store}>
+        <ApolloProvider client={client}>
+          <ThemeProvider theme={appTheme as DefaultTheme}>
+            <StatusBar style="light" />
+            <S.AppWrapper>
+              <NavProvider value={navTheme}>
+                <Slot screenOptions={{ headerShown: false }} />
+              </NavProvider>
+            </S.AppWrapper>
+          </ThemeProvider>
+        </ApolloProvider>
+      </Provider>
+    </AuthProvider>
   )
 }
 

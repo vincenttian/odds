@@ -7,6 +7,7 @@ import { gql, useQuery } from "@apollo/client";
 import { View, Text, FlatList } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import storage from 'src/app/storage';
+import { useAuth } from 'src/app/AuthContext';
 
 // Define the type for a user based on the schema
 interface User {
@@ -20,6 +21,8 @@ interface User {
 
 const Tab = createBottomTabNavigator();
 const HScreen: React.FC = () => {
+  const { isLoggedIn, login, logout } = useAuth();
+
   const handleApiCall = async (url: string, body: any): Promise<any> => {
     try {
       const response = await fetch(url, {
@@ -42,18 +45,19 @@ const HScreen: React.FC = () => {
     }
   };
 
-  const phoneNumber = "+15109968029"; // going downwards
+  const phoneNumber = "+15109968223"; // going downwards
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text style={{ color: 'white' }}>Home Screen</Text>
+      <Text style={{ color: 'white' }}>Logged In: {isLoggedIn ? 'True' : 'False'}</Text>
       <Button title="Create Account" onPress={() => handleApiCall('http://localhost:5500/api/register', { phone: phoneNumber })} />
       <Button title="Verify" onPress={async () => {
         try {
-          const response = await handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '059456' });
+          const response = await handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '868648' });
           if (response?.access_token) {
             // set access token in secure store
             await storage.setItem('auth_token', response.access_token);
-            // await SecureStore.setItemAsync('auth_token', response.access_token);
+            // need to refresh state of app
           }
         } catch (error) {
           console.error("verification failed", error);
@@ -61,6 +65,10 @@ const HScreen: React.FC = () => {
       }} />
       <Button title="Login" onPress={() => handleApiCall('http://localhost:5500/api/login', { phone: phoneNumber })} />
       <Button title="Re-send code" onPress={() => handleApiCall('http://localhost:5500/api/resend-verification/3531b3c2-9fdc-48dc-b586-f115ef5dc84d', { phone: phoneNumber })} />
+      <Button title="Log out" onPress={async () => {
+        storage.deleteItem("auth_token");
+        // need to find way to refresh client state
+      }} />
     </View>
   );
 };
