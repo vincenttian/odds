@@ -27,6 +27,12 @@ Code is split into two parts, the *backend* and the *frontend*.
 `alembic revision --autogenerate -m "Timestamp mixin and uuids"`
 `alembic upgrade head`
 
+Twilio phone number:
+https://console.twilio.com/us1/develop/phone-numbers/manage/incoming/PN67263884d159db25c2510a0540afb6c0/configure
+Twilio logs:
+https://console.twilio.com/us1/monitor/logs/sms
+
+
 ## Frontend
 `npm install`
 `npx expo start`
