@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY') # random token url safe secret key 32
 ALGORITHM = "HS256"
 

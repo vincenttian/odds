@@ -4,6 +4,8 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 # --- Twilio Configuration ---
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
