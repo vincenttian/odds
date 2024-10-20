@@ -1,12 +1,13 @@
 import messagebird
 from twilio.rest import Client
 
-
+from dotenv import load_dotenv
+import os
 
 # --- Twilio Configuration ---
-# TWILIO_ACCOUNT_SID = "AC3d1820a310433f6620ce1267cfcc4a1a" # os.environ["TWILIO_ACCOUNT_SID"]
-# TWILIO_AUTH_TOKEN = "90140fb37355d632037044f5be615eeb" # os.environ["TWILIO_AUTH_TOKEN"]
-# TWILIO_PHONE_NUMBER = "+18887714296" # os.environ["TWILIO_PHONE_NUMBER"]
+TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
+TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+TWILIO_PHONE_NUMBER = os.environ["TWILIO_PHONE_NUMBER"]
 
 # # look at logs at https://console.twilio.com/us1/monitor/logs/sms
 # client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -20,8 +21,7 @@ from twilio.rest import Client
 # me = message
 # import pdb; pdb.set_trace()
 
-
-client = messagebird.Client('CZvDulL95NjXWtV6KDwxBihdTKMrmNAIJPYh')
+client = messagebird.Client(os.environ.get('MESSAGE_BIRD_API_KEY'))
 try:
     # Send a new message
     message = client.message_create(

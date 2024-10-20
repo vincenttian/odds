@@ -2,7 +2,10 @@ import secrets
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-SECRET_KEY = "4xteF7hIJ4GCeZ4CZX9UQ9hu-9ofbfNwGCzVFWJuR28" # random token url safe secret key 32
+import os
+from dotenv import load_dotenv
+
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY') # random token url safe secret key 32
 ALGORITHM = "HS256"
 
 def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=15)):
