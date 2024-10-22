@@ -1,26 +1,31 @@
+import os
+from uuid import UUID
+from datetime import datetime, timedelta, timezone
+
 from fastapi import FastAPI, APIRouter, Body, Depends, HTTPException, Path, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from ariadne import graphql, make_executable_schema, load_schema_from_path, ObjectType
 from pydantic import BaseModel, Field
-from uuid import UUID
+from ariadne import graphql, make_executable_schema, load_schema_from_path, ObjectType
 from graphql import GraphQLError
-
-
-# from ariadne.constants import PLAYGROUND_HTML
-from models import User, Base
-import os
-from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from auth import create_verification_code, create_access_token, verify_code, verify_token, SECRET_KEY, ALGORITHM
-
 import uvicorn
+
+from models import User, Base
+from auth import (
+    create_verification_code,
+    create_access_token,
+    verify_code,
+    verify_token,
+    SECRET_KEY,
+    ALGORITHM
+)
 
 # DATABASE_URL="postgresql://vincenttian@localhost:5432/odds_db"
 DATABASE_URL = os.environ["DATABASE_URL"].replace("postgresql://", "postgresql+asyncpg://")

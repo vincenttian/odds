@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from 'react'
-import * as SecureStore from 'expo-secure-store';
-import styled from 'styled-components/native'
-import { Stack } from 'expo-router'
-import { Button } from 'react-native'
-import { gql, useQuery } from "@apollo/client";
-import { View, Text, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Button, View, Text, FlatList } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Stack } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { gql, useQuery } from '@apollo/client';
+import styled from 'styled-components/native';
+
 import storage from 'src/app/storage';
 import { useAuth } from 'src/app/AuthContext';
-import { useDispatch, useSelector } from 'react-redux';
+
 import { loginAsync, logoutAsync } from 'src/app/_layout';
+
+import { useDispatch, useSelector } from 'react-redux';
 
 
 // Define the type for a user based on the schema
@@ -50,7 +52,7 @@ const HScreen: React.FC = () => {
     }
   };
 
-  const phoneNumber = "+15109968208"; // going downwards
+  const phoneNumber = "+15109968300"; // going downwards
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text style={{ color: 'white' }}>Home Screen</Text>
@@ -61,7 +63,7 @@ const HScreen: React.FC = () => {
           <Button title="Create Account" onPress={() => handleApiCall('http://localhost:5500/api/register', { phone: phoneNumber })} />
           <Button title="Verify" onPress={async () => {
             try {
-              const response = await handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '797808' });
+              const response = await handleApiCall('http://localhost:5500/api/verify', { phone: phoneNumber, code: '623995' });
               if (response?.access_token) {
                 // set access token in secure store
                 // await storage.setItem('auth_token', response.access_token);
@@ -117,10 +119,10 @@ const MyTabs = () => {
 };
 
 export default function HomeScreen() {
-  const { loading, error, data } = useQuery<{ users: User[] }>(GET_USERS);
-  if (loading) return <Text>Loading...</Text>;
-  if (error) return <Text>Error: {error.message}</Text>;
-  console.log(data);
+  // const { loading, error, data } = useQuery<{ users: User[] }>(GET_USERS);
+  // if (loading) return <Text>Loading...</Text>;
+  // if (error) return <Text>Error: {error.message}</Text>;
+  // console.log(data);
   return <MyTabs />
 }
 

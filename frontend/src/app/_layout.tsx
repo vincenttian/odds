@@ -1,14 +1,15 @@
-import 'expo-dev-client'
-import { ThemeProvider as NavProvider } from '@react-navigation/native'
-import { Slot } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
-import PropTypes from "prop-types";
-import styled, { ThemeProvider, type DefaultTheme } from 'styled-components/native'
+import 'expo-dev-client';
+import { StatusBar } from 'expo-status-bar';
+import { Slot } from 'expo-router';
+import PropTypes from 'prop-types';
+import styled, { ThemeProvider, type DefaultTheme } from 'styled-components/native';
+import { ThemeProvider as NavProvider } from '@react-navigation/native';
 import { ApolloClient, ApolloProvider, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
-import { appTheme, navTheme } from 'src/config/theme'
 import { configureStore, createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
+
+import { appTheme, navTheme } from 'src/config/theme';
 import storage from 'src/app/storage';
 import { AuthProvider } from 'src/app/AuthContext';
 
