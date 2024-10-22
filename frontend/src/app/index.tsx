@@ -10,6 +10,7 @@ import storage from 'src/app/storage';
 import { useAuth } from 'src/app/AuthContext';
 
 import { loginAsync, logoutAsync } from 'src/app/_layout';
+import NewUserOnboarding from "src/app/onboarding";
 
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -84,8 +85,6 @@ const HScreen: React.FC = () => {
         <Button title="Log out" onPress={async () => {
           await dispatch(logoutAsync());
           window.location.reload(false);
-          // storage.deleteItem("auth_token");
-          // need to find way to refresh client state
         }} />
       )}
     </View>
@@ -108,7 +107,7 @@ const ProfileScreen: React.FC = () => {
   );
 };
 
-const MyTabs = () => {
+const AuthTabs = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen name="Home" component={HScreen} />
@@ -123,7 +122,12 @@ export default function HomeScreen() {
   // if (loading) return <Text>Loading...</Text>;
   // if (error) return <Text>Error: {error.message}</Text>;
   // console.log(data);
-  return <MyTabs />
+  const { isLoggedIn } = useAuth();
+  if (isLoggedIn) {
+    return <AuthTabs />;
+  } else {
+    return <NewUserOnboarding />
+  }
 }
 
 const S = {
