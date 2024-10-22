@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import AgeSelectionScreen from "src/app/onboarding/age";
+import PhoneNumberScreen from "src/app/onboarding/phone";
 
 export const STEPS = {
     AGE: "age",
@@ -32,7 +33,7 @@ const NewUserOnboarding = () => {
             case STEPS.AGE:
                 return <AgeSelectionScreen onComplete={goToNextStep} />;
             case STEPS.PHONE:
-                return null;
+                return <PhoneNumberScreen onComplete={goToNextStep} />;
             case STEPS.COMMUNITY:
                 return null;
             case STEPS.NAME:
